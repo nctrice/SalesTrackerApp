@@ -20,3 +20,13 @@ input,select{padding:10px;border:1px solid #d1d5da;border-radius:8px;font-size:1
 .data-table tbody tr:hover{background:#fafbfc}
 footer{padding:16px;text-align:center;color:#6a737d}
 @media (max-width:700px){.grid-2{grid-template-columns:1fr}.grid-2 .span-2{grid-column:auto}}
+
+/* Hide all tab panels by default */
+.tab-content {
+  display: none;
+}
+
+/* Show only the active tab panel */
+.tab-content.active {
+  display: block;
+}
