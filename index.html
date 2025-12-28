@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SalesTrackerNEW (PWA)</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b7df2" />
+  <link rel="icon" href="assets/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>SalesTrackerNEW</h1>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="payments">Payments</button>
+      <button class="tab-btn" data-tab="receivables">Receivables</button>
+      <button class="tab-btn" data-tab="stock">Stock</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Payments Tab -->
+    <section id="payments" class="tab-content active">
+      <div class="card">
+        <h2>Add Payment</h2>
+        <form id="payment-form">
+          <div class="grid-2">
+            <label>Date <input type="date" id="p-date" required></label>
+            <label>Payment name <input type="text" id="p-name" required placeholder="e.g., Deposit"></label>
+            <label>Type
+              <select id="p-type" required>
+                <option value="Transfer">Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </label>
+            <label>Amount (₦) <input type="number" id="p-amount" required step="0.01" min="0"></label>
+          </div>
+          <button type="submit" class="primary">Save Payment</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Payments</h2>
+          <div>
+            <button id="export-payments" class="secondary">Export CSV</button>
+          </div>
+        </div>
+        <table class="data-table" id="payments-table">
+          <thead><tr><th>Date</th><th>Name</th><th>Type</th><th class="right">Amount</th><th></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="3" class="right">Total</td><td class="right" id="payments-total">₦0</td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Receivables Tab -->
+    <section id="receivables" class="tab-content">
+      <div class="card">
+        <h2>Add Receivable</h2>
+        <form id="receivable-form">
+          <div class="grid-2">
+            <label>Invoice date <input type="date" id="r-date" required></label>
+            <label>Customer name <input type="text" id="r-customer" required></label>
+            <label>Invoice number <input type="text" id="r-number" required></label>
+            <label>Amount (₦) <input type="number" id="r-amount" required step="0.01" min="0"></label>
+            <label class="span-2">Comment <input type="text" id="r-comment" placeholder="optional"></label>
+          </div>
+          <button type="submit" class="primary">Save Receivable</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Receivables</h2>
+          <div>
+            <button id="export-receivables" class="secondary">Export CSV</button>
+          </div>
+        </div>
+        <table class="data-table" id="receivables-table">
+          <thead><tr><th>Invoice Date</th><th>Customer</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="3" class="right">Total</td><td class="right" id="receivables-total">₦0</td><td></td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Stock Tab -->
+    <section id="stock" class="tab-content">
+      <div class="card">
+        <h2>Add / Update Stock</h2>
+        <form id="stock-form">
+          <div class="grid-2">
+            <label>Product
+              <select id="s-product" required></select>
+            </label>
+            <label>Price (₦)
+              <input type="number" id="s-price" step="0.01" min="0" disabled>
+            </label>
+            <label class="span-2">Quantity
+              <input type="number" id="s-qty" min="0" step="1" value="0" required>
+            </label>
+          </div>
+          <button type="submit" class="primary">Save Stock</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Stock Inventory</h2>
+          <div>
+            <button id="export-inventory" class="secondary">Export CSV</button>
+          </div>
+        </div>
+        <table class="data-table" id="inventory-table">
+          <thead><tr><th>Product</th><th class="right">Price</th><th class="right">Qty</th><th class="right">Total Value</th><th></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="3" class="right">Grand Total</td><td class="right" id="inventory-total">₦0</td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>SalesTrackerNEW PWA • LocalStorage • NGN</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
