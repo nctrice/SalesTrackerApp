@@ -6,7 +6,7 @@ header h1{margin:0;font-size:20px}
 .tab-btn.active{background:#fff;color:#0b7df2;border-bottom:2px solid #0b7df2}
 main{padding:16px;max-width:1000px;margin:0 auto}
 .card{background:#fff;border:1px solid #e1e4e8;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
 .primary{background:#0b7df2;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
 .secondary{background:#fff;color:#0b7df2;border:1px solid #0b7df2;padding:8px 12px;border-radius:8px;cursor:pointer}
 .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -27,7 +27,7 @@ footer{padding:16px;text-align:center;color:#6a737d}
 .chip{font-size:13px;margin-right:6px}
 .chip-x{background:transparent;border:none;color:#d73a49;font-weight:bold;cursor:pointer}
 
-/* Tabs visibility fix */
+/* Tabs visibility */
 .tab-content{display:none}
 .tab-content.active{display:block}
 
