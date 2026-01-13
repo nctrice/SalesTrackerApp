@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,8 +36,21 @@
       </div>
 
       <div class="card">
-        <h2>Add Payment (Credit)</h2>
-        <form id="payment-form">
+        <div class="card-head">
+          <h2>Post a Payment</h2>
+          <div class="inline">
+            <label style="flex-direction:row;align-items:center;gap:6px">
+              <input type="radio" name="pay-mode" id="mode-credit" checked> Credit payment
+            </label>
+            <label style="flex-direction:row;align-items:center;gap:6px">
+              <input type="radio" name="pay-mode" id="mode-debit"> Debit invoice
+            </label>
+          </div>
+        </div>
+        <h3 class="muted">Select a mode above to reveal the form.</h3>
+
+        <h2 class="visually-hidden">Add Payment (Credit)</h2>
+        <form id="payment-form" class="hidden">
           <div class="grid-2">
             <label>Date <input type="date" id="p-date" required></label>
             <label>Payment name <input type="text" id="p-name" required placeholder="e.g., Company deposit"></label>
@@ -53,11 +67,9 @@
           </div>
           <button type="submit" class="primary">Save Payment</button>
         </form>
-      </div>
 
-      <div class="card">
-        <h2>Add Debit</h2>
-        <form id="debit-form">
+        <h2 class="visually-hidden">Add Debit</h2>
+        <form id="debit-form" class="hidden">
           <div class="grid-2">
             <label>Date <input type="date" id="d-date" required></label>
             <label>Invoice type <input type="text" id="d-invtype" required placeholder="e.g., Expense, Charge"></label>
