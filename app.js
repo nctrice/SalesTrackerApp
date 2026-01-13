@@ -25,6 +25,7 @@ const LS = {
   payments: 'st_payments',
   receivables: 'st_receivables',
   inventory: 'st_inventory',
+  favorites: 'st_favorites',
 };
 
 function lsGet(key, fallback) {
@@ -50,11 +51,13 @@ function lsSet(key, value) {
 let payments = lsGet(LS.payments, []);
 let receivables = lsGet(LS.receivables, []);
 let inventory = lsGet(LS.inventory, Object.keys(PRODUCT_CATALOG).map(name => ({ productName: name, price: PRODUCT_CATALOG[name], quantity: 0 })));
+let favorites = lsGet(LS.favorites, []); // array of customer names
 
 // ====== UI HELPERS ======
 function $(sel) { return document.querySelector(sel); }
 function el(tag, opts = {}) { const e = document.createElement(tag); Object.assign(e, opts); return e; }
-function toDateStr(d) { return new Date(d).toLocaleDateString(); }
+function toDateStr(d) { const dt = new Date(d); return isNaN(dt) ? '' : dt.toLocaleDateString(); }
+function toDateTimeStr(d) { const dt = new Date(d); return isNaN(dt) ? '' : dt.toLocaleString(); }
 
 // ====== TABS ======
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -91,7 +94,7 @@ function renderPayments() {
 $('#payment-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const item = {
-    date: $('#p-date').value || new Date(),
+    date: $('#p-date').value || new Date().toISOString(),
     name: $('#p-name').value.trim(),
     type: $('#p-type').value,
     amount: Number($('#p-amount').value || 0),
@@ -109,13 +112,20 @@ $('#export-payments').addEventListener('click', () => {
 });
 
 // ====== RECEIVABLES ======
-function renderReceivables() {
+function renderReceivablesAll() {
+  // sort by createdAt desc (fallback to now if missing)
+  const rows = receivables.slice().sort((a,b) => {
+    const ad = new Date(a.createdAt || a.invoiceDate || Date.now()).getTime();
+    const bd = new Date(b.createdAt || b.invoiceDate || Date.now()).getTime();
+    return bd - ad;
+  });
   const tbody = $('#receivables-table tbody');
   tbody.innerHTML = '';
   let total = 0;
-  receivables.forEach((r, idx) => {
+  rows.forEach((r, idx) => {
     total += Number(r.amount) || 0;
     const tr = el('tr');
+    tr.appendChild(el('td', { textContent: toDateTimeStr(r.createdAt) }));
     tr.appendChild(el('td', { textContent: toDateStr(r.invoiceDate) }));
     tr.appendChild(el('td', { textContent: r.customerName }));
     tr.appendChild(el('td', { textContent: r.invoiceNumber }));
@@ -123,7 +133,12 @@ function renderReceivables() {
     tr.appendChild(el('td', { textContent: r.comment || '' }));
     const tdAct = el('td');
     const del = el('button', { textContent: 'Delete', className: 'secondary' });
-    del.addEventListener('click', () => { receivables.splice(idx,1); lsSet(LS.receivables, receivables); renderReceivables(); });
+    del.addEventListener('click', () => {
+      const origIdx = receivables.findIndex(x => x === rows[idx]);
+      if (origIdx >= 0) receivables.splice(origIdx,1);
+      lsSet(LS.receivables, receivables);
+      renderReceivables();
+    });
     tdAct.appendChild(del);
     tr.appendChild(tdAct);
     tbody.appendChild(tr);
@@ -131,10 +146,98 @@ function renderReceivables() {
   $('#receivables-total').textContent = fmt.format(total);
 }
 
+function renderFavSelect() {
+  const sel = $('#r-fav-select');
+  sel.innerHTML = '';
+  const ph = el('option', { value: '', textContent: 'Favorites…' });
+  sel.appendChild(ph);
+  favorites.forEach(name => sel.appendChild(el('option', { value: name, textContent: name })));
+  sel.addEventListener('change', () => {
+    if (sel.value) $('#r-customer').value = sel.value;
+    sel.value = '';
+  });
+}
+
+function renderFavoritesUI() {
+  const list = $('#fav-list');
+  list.innerHTML = '';
+  favorites.forEach((name, idx) => {
+    const chip = el('span', { className: 'chip', textContent: name });
+    const x = el('button', { className: 'chip-x', textContent: '×', title: 'Remove' });
+    x.addEventListener('click', () => {
+      favorites.splice(idx,1);
+      lsSet(LS.favorites, favorites);
+      renderReceivables();
+    });
+    const wrap = el('span', { className: 'chip-wrap' });
+    wrap.appendChild(chip); wrap.appendChild(x);
+    list.appendChild(wrap);
+  });
+}
+
+function renderCustomerBoards() {
+  const container = $('#customer-boards');
+  container.innerHTML = '';
+  favorites.forEach(name => {
+    const card = el('div', { className: 'card' });
+    const head = el('div', { className: 'card-head' });
+    head.appendChild(el('h2', { textContent: `Receivables • ${name}` }));
+    card.appendChild(head);
+    const tbl = el('table', { className: 'data-table' });
+    tbl.innerHTML = '<thead><tr><th>Entered</th><th>Invoice Date</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>';
+    const tbody = el('tbody');
+    const rows = receivables.filter(r => r.customerName === name).sort((a,b) => {
+      const ad = new Date(a.createdAt || a.invoiceDate || Date.now()).getTime();
+      const bd = new Date(b.createdAt || b.invoiceDate || Date.now()).getTime();
+      return bd - ad;
+    });
+    let total = 0;
+    rows.forEach((r, idx) => {
+      total += Number(r.amount) || 0;
+      const tr = el('tr');
+      tr.appendChild(el('td', { textContent: toDateTimeStr(r.createdAt) }));
+      tr.appendChild(el('td', { textContent: toDateStr(r.invoiceDate) }));
+      tr.appendChild(el('td', { textContent: r.invoiceNumber }));
+      tr.appendChild(el('td', { textContent: fmt.format(r.amount), className: 'right' }));
+      tr.appendChild(el('td', { textContent: r.comment || '' }));
+      const tdAct = el('td');
+      const del = el('button', { textContent: 'Delete', className: 'secondary' });
+      del.addEventListener('click', () => {
+        const globalIdx = receivables.findIndex(x => x === rows[idx]);
+        if (globalIdx >= 0) receivables.splice(globalIdx,1);
+        lsSet(LS.receivables, receivables);
+        renderReceivables();
+      });
+      tdAct.appendChild(del);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    const tfoot = el('tfoot');
+    const trf = el('tr');
+    trf.appendChild(el('td', { colSpan: 3, className: 'right', textContent: 'Total' }));
+    trf.appendChild(el('td', { className: 'right', textContent: fmt.format(total) }));
+    trf.appendChild(el('td', {}));
+    trf.appendChild(el('td', {}));
+    tfoot.appendChild(trf);
+    tbl.appendChild(tfoot);
+    card.appendChild(tbl);
+    container.appendChild(card);
+  });
+}
+
+function renderReceivables() {
+  renderReceivablesAll();
+  renderFavoritesUI();
+  renderFavSelect();
+  renderCustomerBoards();
+}
+
 $('#receivable-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const item = {
-    invoiceDate: $('#r-date').value || new Date(),
+    createdAt: new Date().toISOString(), // entry timestamp
+    invoiceDate: $('#r-date').value || new Date().toISOString(),
     customerName: $('#r-customer').value.trim(),
     invoiceNumber: $('#r-number').value.trim(),
     amount: Number($('#r-amount').value || 0),
@@ -147,8 +250,20 @@ $('#receivable-form').addEventListener('submit', (e) => {
 });
 
 $('#export-receivables').addEventListener('click', () => {
-  const rows = [['Invoice Date','Customer Name','Invoice Number','Amount','Comment'], ...receivables.map(r => [r.invoiceDate, r.customerName, r.invoiceNumber, r.amount, r.comment])];
+  const rows = [['Entered','Invoice Date','Customer Name','Invoice Number','Amount','Comment'], ...receivables.map(r => [r.createdAt || '', r.invoiceDate, r.customerName, r.invoiceNumber, r.amount, r.comment])];
   downloadCSV('receivables.csv', rows);
+});
+
+// Favorites management
+$('#fav-add').addEventListener('click', () => {
+  const name = $('#fav-input').value.trim();
+  if (!name) return;
+  if (favorites.includes(name)) { alert('Already added.'); return; }
+  if (favorites.length >= 5) { alert('You can keep up to five favorite customers.'); return; }
+  favorites.push(name);
+  lsSet(LS.favorites, favorites);
+  $('#fav-input').value = '';
+  renderReceivables();
 });
 
 // ====== INVENTORY ======
@@ -203,30 +318,6 @@ function renderInventory() {
   });
   $('#inventory-total').textContent = fmt.format(total);
 }
-
-$('#stock-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const name = $('#s-product').value;
-  const price = Number($('#s-price').value || 0);
-  const qty = Number($('#s-qty').value || 0);
-  const idx = inventory.findIndex(x => x.productName === name);
-  if (idx >= 0) {
-    // update existing row's price & qty
-    inventory[idx].price = price;
-    inventory[idx].quantity = qty;
-  } else {
-    inventory.push({ productName: name, price, quantity: qty });
-  }
-  lsSet(LS.inventory, inventory);
-  e.target.reset();
-  populateProductSelect(); // reset price
-  renderInventory();
-});
-
-$('#export-inventory').addEventListener('click', () => {
-  const rows = [['Product Name','Price','Quantity','Total Value'], ...inventory.map(i => [i.productName, i.price, i.quantity, (Number(i.price)||0)*(Number(i.quantity)||0)])];
-  downloadCSV('inventory.csv', rows);
-});
 
 // ====== CSV HELPERS ======
 function downloadCSV(filename, rows) {

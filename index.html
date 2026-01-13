@@ -63,7 +63,12 @@
         <form id="receivable-form">
           <div class="grid-2">
             <label>Invoice date <input type="date" id="r-date" required></label>
-            <label>Customer name <input type="text" id="r-customer" required></label>
+            <label>Customer name
+              <div class="inline">
+                <input type="text" id="r-customer" required placeholder="e.g., ABC Pharmacy">
+                <select id="r-fav-select" title="Quick select favorite" class="mini"></select>
+              </div>
+            </label>
             <label>Invoice number <input type="text" id="r-number" required></label>
             <label>Amount (₦) <input type="number" id="r-amount" required step="0.01" min="0"></label>
             <label class="span-2">Comment <input type="text" id="r-comment" placeholder="optional"></label>
@@ -74,17 +79,32 @@
 
       <div class="card">
         <div class="card-head">
-          <h2>Receivables</h2>
+          <h2>Receivables (All)</h2>
           <div>
             <button id="export-receivables" class="secondary">Export CSV</button>
           </div>
         </div>
+        <p class="muted">Sorted by <strong>time of entry</strong> (newest first).</p>
         <table class="data-table" id="receivables-table">
-          <thead><tr><th>Invoice Date</th><th>Customer</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>
+          <thead><tr><th>Entered</th><th>Invoice Date</th><th>Customer</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>
           <tbody></tbody>
-          <tfoot><tr><td colspan="3" class="right">Total</td><td class="right" id="receivables-total">₦0</td><td></td><td></td></tr></tfoot>
+          <tfoot><tr><td colspan="4" class="right">Total</td><td class="right" id="receivables-total">₦0</td><td></td><td></td></tr></tfoot>
         </table>
       </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Favorite Customers</h2>
+          <div class="inline">
+            <input type="text" id="fav-input" placeholder="Type customer name">
+            <button id="fav-add" class="secondary">Add</button>
+          </div>
+        </div>
+        <p class="muted">Add up to five customers to maintain dedicated receivable boards below.</p>
+        <div id="fav-list" class="chips"></div>
+      </div>
+
+      <div id="customer-boards"></div>
     </section>
 
     <!-- Stock Tab -->
