@@ -43,3 +43,32 @@ footer{padding:16px;text-align:center;color:#6a737d}
   .grid-2{grid-template-columns:1fr}
   .grid-2 .span-2{grid-column:auto}
 }
+
+/* Dashboard styles */
+.stats-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.stat{
+  background:#fff;
+  border:1px solid #e1e4e8;
+  border-radius:10px;
+  padding:12px;
+}
+.stat-label{font-size:13px;color:#6a737d;margin-bottom:4px}
+.stat-value{font-weight:700;font-size:18px}
+
+/* BIG, BOLD, GREY background for Business Worth */
+.dashboard-worth{
+  background:#eceff3;        /* grey background */
+  border-radius:12px;
+  padding:16px;
+  font-weight:900;            /* heavier than others */
+  font-size:28px;             /* bigger than others */
+  text-align:center;
+}
+.dashboard-worth.positive{color:#22863a} /* green */
+.dashboard-worth.negative{color:#d73a49} /* red */
+
