@@ -1,4 +1,4 @@
-const CACHE = 'st-cache-v6';
+const CACHE = 'st-cache-v7';
 const ASSETS = [
   '/',
   '/index.html',
