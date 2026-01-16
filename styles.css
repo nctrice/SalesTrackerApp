@@ -1,4 +1,3 @@
-
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:#f6f8fb;color:#1b1f23}
 header{background:#0b7df2;color:white;padding:14px 16px;position:sticky;top:0;z-index:10}
@@ -29,46 +28,27 @@ footer{padding:16px;text-align:center;color:#6a737d}
 .chip{font-size:13px;margin-right:6px}
 .chip-x{background:transparent;border:none;color:#d73a49;font-weight:bold;cursor:pointer}
 
-/* Tabs visibility */
+/* Tabs */
 .tab-content{display:none}
 .tab-content.active{display:block}
 
-/* Hide headings used only for a11y */
+/* A11y hidden heading */
 .visually-hidden{position:absolute !important; clip:rect(1px,1px,1px,1px); padding:0 !important; border:0 !important; height:1px !important; width:1px !important; overflow:hidden}
 
 /* Payment mode toggle */
 .hidden{display:none}
 
+/* Dashboard styles */
+.stats-grid{display:grid;grid-template-columns: repeat(2, minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid #e1e4e8;border-radius:10px;padding:12px}
+.stat-label{font-size:13px;color:#6a737d;margin-bottom:4px}
+.stat-value{font-weight:700;font-size:18px}
+.dashboard-worth{background:#eceff3;border-radius:12px;padding:16px;font-weight:900;font-size:28px;text-align:center}
+.dashboard-worth.positive{color:#22863a}
+.dashboard-worth.negative{color:#d73a49}
+
 @media (max-width:700px){
   .grid-2{grid-template-columns:1fr}
   .grid-2 .span-2{grid-column:auto}
+  .stats-grid{grid-template-columns:1fr}
 }
-
-/* Dashboard styles */
-.stats-grid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap:12px;
-  margin-bottom:16px;
-}
-.stat{
-  background:#fff;
-  border:1px solid #e1e4e8;
-  border-radius:10px;
-  padding:12px;
-}
-.stat-label{font-size:13px;color:#6a737d;margin-bottom:4px}
-.stat-value{font-weight:700;font-size:18px}
-
-/* BIG, BOLD, GREY background for Business Worth */
-.dashboard-worth{
-  background:#eceff3;        /* grey background */
-  border-radius:12px;
-  padding:16px;
-  font-weight:900;            /* heavier than others */
-  font-size:28px;             /* bigger than others */
-  text-align:center;
-}
-.dashboard-worth.positive{color:#22863a} /* green */
-.dashboard-worth.negative{color:#d73a49} /* red */
-
