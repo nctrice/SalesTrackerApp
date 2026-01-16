@@ -86,15 +86,48 @@ $('#ledger-add').addEventListener('click', () => {
   populateLedgerSelects();
 });
 
+
 function populateLedgerSelects(){
-  ['#p-ledger','#d-ledger'].forEach(sel => {
+  ['#p-ledger','#d-ledger','#r-ledger','#s-ledger','#dash-ledger'].forEach(sel => {
     const s = $(sel); if(!s) return; s.innerHTML='';
     const ph = el('option', { value:'', textContent:'Select ledger...' });
     s.appendChild(ph);
     ledgers.forEach(name => s.appendChild(el('option', { value:name, textContent:name })));
+    if (!s.value && ledgers.length > 0) s.value = ledgers[0];
   });
 }
 
+//====== DASHBOARD CALCULATION ======
+
+function renderDashboard(){
+  const sel = $('#dash-ledger');
+  if (!sel) return;
+  const ledger = sel.value || ledgers[0] || '';
+  if (!ledger) {
+    ['#dash-debits','#dash-credits','#dash-receivables','#dash-stock'].forEach(id => $(id).textContent = fmt.format(0));
+    const worthBox = $('#dash-worth'); worthBox.textContent = fmt.format(0);
+    worthBox.classList.remove('positive','negative');
+    return;
+  }
+
+  const D = debits.filter(d => d.ledger === ledger).reduce((s,d)=> s + (Number(d.amount)||0), 0);
+  const C = payments.filter(p => p.ledger === ledger).reduce((s,p)=> s + (Number(p.amount)||0), 0);
+  const R = receivables.filter(r => r.ledger === ledger).reduce((s,r)=> s + (Number(r.amount)||0), 0);
+  const S = inventory.filter(i => i.ledger === ledger).reduce((s,i)=> s + (Number(i.price)||0)*(Number(i.quantity)||0), 0);
+
+  $('#dash-debits').textContent = fmt.format(D);
+  $('#dash-credits').textContent = fmt.format(C);
+  $('#dash-receivables').textContent = fmt.format(R);
+  $('#dash-stock').textContent = fmt.format(S);
+
+  const W = D - (C + R + S);
+  const worthBox = $('#dash-worth');
+  worthBox.textContent = fmt.format(W);
+  worthBox.classList.remove('positive','negative');
+  if (W > 0) worthBox.classList.add('positive'); else if (W < 0) worthBox.classList.add('negative');
+}
+
+$('#dash-ledger')?.addEventListener('change', renderDashboard);
 // ====== PAYMENTS (CREDITS) ======
 function renderPaymentsAll(){
   const rows = payments.slice().sort((a,b)=> toDate(a.date)-toDate(b.date)); // earliest -> latest
@@ -233,12 +266,19 @@ function renderLedgerBoards(){
 }
 
 // ====== RECEIVABLES ======
+
 function renderReceivablesAll() {
-  const rows = receivables.slice().sort((a,b) => new Date((a.createdAt||a.invoiceDate)) - new Date((b.createdAt||b.invoiceDate)) ).reverse(); // newest first
+  // newest first
+  const rows = receivables
+    .slice()
+    .sort((a,b) => new Date(a.createdAt||a.invoiceDate) - new Date(b.createdAt||b.invoiceDate))
+    .reverse();
+
   const tbody = document.querySelector('#receivables-table tbody');
   tbody.innerHTML = '';
   let total = 0;
-  rows.forEach((r, idx) => {
+
+  rows.forEach((r) => {
     total += Number(r.amount) || 0;
     const tr = el('tr');
     tr.appendChild(el('td', { textContent: new Date(r.createdAt).toLocaleString() }));
@@ -246,21 +286,106 @@ function renderReceivablesAll() {
     tr.appendChild(el('td', { textContent: r.customerName }));
     tr.appendChild(el('td', { textContent: r.invoiceNumber }));
     tr.appendChild(el('td', { textContent: fmt.format(r.amount), className: 'right' }));
+    tr.appendChild(el('td', { textContent: r.ledger || '' }));
     tr.appendChild(el('td', { textContent: r.comment || '' }));
+
     const tdAct = el('td');
     const del = el('button', { textContent: 'Delete', className: 'secondary' });
     del.addEventListener('click', () => {
-      const origIdx = receivables.findIndex(x => x === rows[idx]);
-      if (origIdx >= 0) receivables.splice(origIdx,1);
+      const idx = receivables.indexOf(r);
+      if (idx >= 0) receivables.splice(idx,1);
       lsSet(LS.receivables, receivables);
-      renderReceivables();
+      renderReceivables(); renderDashboard();
     });
     tdAct.appendChild(del);
+
     tr.appendChild(tdAct);
     tbody.appendChild(tr);
   });
+
   document.querySelector('#receivables-total').textContent = fmt.format(total);
 }
+
+function renderReceivablesLedgerBoards() {
+  const container = document.querySelector('#receivables-ledger-boards');
+  if (!container) return;
+  container.innerHTML = '';
+
+  ledgers.forEach(ledgerName => {
+    // Filter rows for this ledger (newest first)
+    const rows = receivables
+      .filter(r => r.ledger === ledgerName)
+      .sort((a,b) => new Date(a.createdAt||a.invoiceDate) - new Date(b.createdAt||b.invoiceDate))
+      .reverse();
+
+    // Skip empty ledgers (optional): comment out if you want to show empty tables
+    if (rows.length === 0) return;
+
+    const card = el('div', { className: 'card' });
+    const head = el('div', { className: 'card-head' });
+    head.appendChild(el('h3', { textContent: `Ledger • ${ledgerName}` }));
+    card.appendChild(head);
+
+    const tbl = el('table', { className: 'data-table' });
+    tbl.innerHTML = '<thead><tr><th>Entered</th><th>Invoice Date</th><th>Customer</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>';
+    const tbody = el('tbody');
+
+    let total = 0;
+    rows.forEach(r => {
+      total += Number(r.amount) || 0;
+
+      const tr = el('tr');
+      tr.appendChild(el('td', { textContent: new Date(r.createdAt).toLocaleString() }));
+      tr.appendChild(el('td', { textContent: toDateStr(r.invoiceDate) }));
+      tr.appendChild(el('td', { textContent: r.customerName }));
+      tr.appendChild(el('td', { textContent: r.invoiceNumber }));
+      tr.appendChild(el('td', { textContent: fmt.format(r.amount), className: 'right' }));
+      tr.appendChild(el('td', { textContent: r.comment || '' }));
+
+      const tdAct = el('td');
+
+      // MOVE button (per-ledger tables only)
+      const move = el('button', { textContent: 'Move', className: 'secondary' });
+      move.addEventListener('click', () => {
+        if (ledgers.length === 0) { alert('No ledgers available'); return; }
+        const list = ledgers.join(', ');
+        const target = prompt(`Move to which ledger?\nAvailable: ${list}`);
+        if (target && ledgers.includes(target)) {
+          r.ledger = target;
+          lsSet(LS.receivables, receivables);
+          renderReceivables(); renderDashboard();
+        }
+      });
+
+      const del = el('button', { textContent: 'Delete', className: 'secondary' });
+      del.addEventListener('click', () => {
+        const gi = receivables.indexOf(r);
+        if (gi >= 0) receivables.splice(gi,1);
+        lsSet(LS.receivables, receivables);
+        renderReceivables(); renderDashboard();
+      });
+
+      tdAct.appendChild(move);
+      tdAct.appendChild(del);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+
+    tbl.appendChild(tbody);
+    const tfoot = el('tfoot');
+    const trf = el('tr');
+    trf.appendChild(el('td', { colSpan: 4, className: 'right', textContent: 'Total' }));
+    trf.appendChild(el('td', { className: 'right', textContent: fmt.format(total) }));
+    trf.appendChild(el('td', {}));
+    trf.appendChild(el('td', {}));
+    tfoot.appendChild(trf);
+    tbl.appendChild(tfoot);
+
+    card.appendChild(tbl);
+    container.appendChild(card);
+  });
+}
+
 
 function renderFavSelect() {
   const sel = document.querySelector('#r-fav-select'); sel.innerHTML = '';
@@ -279,48 +404,90 @@ function renderFavoritesUI() {
   });
 }
 
+
 function renderCustomerBoards() {
-  const container = document.querySelector('#customer-boards'); container.innerHTML = '';
+  const container = document.querySelector('#customer-boards');
+  if (!container) return;
+  container.innerHTML = '';
+
   favorites.forEach(name => {
     const card = el('div', { className: 'card' });
-    const head = el('div', { className: 'card-head' }); head.appendChild(el('h2', { textContent: `Receivables • ${name}` })); card.appendChild(head);
+
+    const head = el('div', { className: 'card-head' });
+    head.appendChild(el('h2', { textContent: `Receivables • ${name}` }));
+    card.appendChild(head);
+
     const tbl = el('table', { className: 'data-table' });
-    tbl.innerHTML = '<thead><tr><th>Entered</th><th>Invoice Date</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>';
+    tbl.innerHTML = `
+      <thead>
+        <tr>
+          <th>Entered</th>
+          <th>Invoice Date</th>
+          <th>Invoice #</th>
+          <th class="right">Amount</th>
+          <th>Ledger</th>
+          <th>Comment</th>
+          <th></th>
+        </tr>
+      </thead>`;
+
     const tbody = el('tbody');
+
     const rows = receivables
       .filter(r => r.customerName === name)
-      .sort((a,b) => new Date((a.createdAt||a.invoiceDate)) - new Date((b.createdAt||b.invoiceDate)) )
+      .sort((a,b) => new Date(a.createdAt||a.invoiceDate) - new Date(b.createdAt||b.invoiceDate))
       .reverse();
+
     let total = 0;
-    rows.forEach((r, idx) => {
+
+    rows.forEach(r => {
       total += Number(r.amount) || 0;
+
       const tr = el('tr');
       tr.appendChild(el('td', { textContent: new Date(r.createdAt).toLocaleString() }));
       tr.appendChild(el('td', { textContent: toDateStr(r.invoiceDate) }));
       tr.appendChild(el('td', { textContent: r.invoiceNumber }));
       tr.appendChild(el('td', { textContent: fmt.format(r.amount), className: 'right' }));
+      tr.appendChild(el('td', { textContent: r.ledger || '' }));
       tr.appendChild(el('td', { textContent: r.comment || '' }));
-      const tdAct = el('td'); const del = el('button', { textContent: 'Delete', className: 'secondary' });
+
+      const tdAct = el('td');
+
+      // DELETE only (no move button here)
+      const del = el('button', { textContent: 'Delete', className: 'secondary' });
       del.addEventListener('click', () => {
-        const gi = receivables.findIndex(x => x === rows[idx]);
-        if (gi >= 0) receivables.splice(gi,1);
+        const idx = receivables.indexOf(r);
+        if (idx >= 0) receivables.splice(idx,1);
         lsSet(LS.receivables, receivables);
         renderReceivables();
+        renderDashboard();
       });
-      tdAct.appendChild(del); tr.appendChild(tdAct); tbody.appendChild(tr);
+
+      tdAct.appendChild(del);
+      tr.appendChild(tdAct);
+
+      tbody.appendChild(tr);
     });
+
     tbl.appendChild(tbody);
-    const tfoot = el('tfoot'); const trf = el('tr');
-    trf.appendChild(el('td', { colSpan: 3, className: 'right', textContent: 'Total' }));
+
+    // footer
+    const tfoot = el('tfoot');
+    const trf = el('tr');
+    trf.appendChild(el('td', { colSpan: 4, className: 'right', textContent: 'Total' }));
     trf.appendChild(el('td', { className: 'right', textContent: fmt.format(total) }));
     trf.appendChild(el('td', {}));
     trf.appendChild(el('td', {}));
-    tfoot.appendChild(trf); tbl.appendChild(tfoot);
-    card.appendChild(tbl); container.appendChild(card);
+    tfoot.appendChild(trf);
+    tbl.appendChild(tfoot);
+
+    card.appendChild(tbl);
+    container.appendChild(card);
   });
 }
 
-function renderReceivables() { renderReceivablesAll(); renderFavoritesUI(); renderFavSelect(); renderCustomerBoards(); }
+
+function renderReceivables() { renderReceivablesAll(); renderFavoritesUI(); renderFavSelect(); renderCustomerBoards();renderReceivablesLedgerBoards(); }
 
 // Receivables form
 document.querySelector('#receivable-form').addEventListener('submit', (e) => {
