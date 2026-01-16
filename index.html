@@ -14,14 +14,56 @@
 <body>
   <header>
     <h1>SalesTrackerNEW</h1>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="payments">Payments</button>
-      <button class="tab-btn" data-tab="receivables">Receivables</button>
-      <button class="tab-btn" data-tab="stock">Stock</button>
-    </nav>
+
+<nav class="tabs">
+  <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn active" data-tab="payments">Payments</button>
+  <button class="tab-btn" data-tab="receivables">Receivables</button>
+  <button class="tab-btn" data-tab="stock">Stock</button>
+</nav>
+
   </header>
 
   <main>
+    
+<!-- Dashboard Tab -->
+<section id="dashboard" class="tab-content">
+  <div class="card">
+    <div class="card-head">
+      <h2>Dashboard</h2>
+      <div class="inline">
+        <label>Ledger
+          <select id="dash-ledger"></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-label">Total Debits</div>
+        <div class="stat-value" id="dash-debits">₦0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Credits</div>
+        <div class="stat-value" id="dash-credits">₦0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Receivables</div>
+        <div class="stat-value" id="dash-receivables">₦0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Stock Value</div>
+        <div class="stat-value" id="dash-stock">₦0</div>
+      </div>
+    </div>
+
+    <div id="dash-worth" class="dashboard-worth">₦0</div>
+    <p class="muted">
+      Business Worth = Total Debits − (Total Credits + Receivables + Stock Value)
+    </p>
+  </div>
+</section>
+
     <!-- Payments Tab -->
     <section id="payments" class="tab-content active">
       <div class="card">
@@ -90,7 +132,7 @@
             <button id="export-payments" class="secondary">Export All Payments</button>
           </div>
         </div>
-        <p class="muted">Arranged from <strong>earliest to latest</strong>.</p>
+        <p class="muted">Arranged from <strong>latest to earliest</strong>.</p>
         <table class="data-table" id="payments-table">
           <thead><tr><th>Date</th><th>Name</th><th>Type</th><th>Ledger</th><th class="right">Amount</th><th></th></tr></thead>
           <tbody></tbody>
@@ -125,10 +167,20 @@
       <div class="card">
         <div class="card-head">
           <h2>Receivables (All)</h2>
+          
           <div>
             <button id="export-receivables" class="secondary">Export CSV</button>
           </div>
         </div>
+        
+<!-- Receivables by Ledger -->
+<div class="card">
+  <div class="card-head">
+    <h2>Receivables by Ledger</h2>
+  </div>
+  <div id="receivables-ledger-boards"></div>
+</div>
+
         <p class="muted">Sorted by <strong>time of entry</strong> (newest first).</p>
         <table class="data-table" id="receivables-table">
           <thead><tr><th>Entered</th><th>Invoice Date</th><th>Customer</th><th>Invoice #</th><th class="right">Amount</th><th>Comment</th><th></th></tr></thead>
