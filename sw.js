@@ -1,6 +1,7 @@
+
 const CACHE = 'st-cache-v7';
 const ASSETS = [
-  '/',
+  '/',                 // see note below for project pages
   '/index.html',
   '/styles.css',
   '/app.js',
@@ -8,6 +9,7 @@ const ASSETS = [
   '/assets/icon-192.png',
   '/assets/icon-512.png'
 ];
+
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
 });
