@@ -29,10 +29,8 @@ footer{padding:16px;text-align:center;color:#6a737d}
 .chip-x{background:transparent;border:none;color:#d73a49;font-weight:bold;cursor:pointer}
 
 /* Tabs */
-
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
+.tab-content{display:none}
+.tab-content.active{display:block}
 
 /* A11y hidden heading */
 .visually-hidden{position:absolute !important; clip:rect(1px,1px,1px,1px); padding:0 !important; border:0 !important; height:1px !important; width:1px !important; overflow:hidden}
