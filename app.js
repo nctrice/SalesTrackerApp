@@ -48,6 +48,7 @@ const toDate    = d => new Date(d);
 const toDateStr = d => { const dt = new Date(d); return isNaN(dt) ? '' : dt.toLocaleDateString(); };
 
 // ====== TABS ======
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -57,6 +58,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'dashboard') renderDashboard();
   });
 });
+
 
 // ====== LEDGERS ======
 function renderLedgersUI(){
